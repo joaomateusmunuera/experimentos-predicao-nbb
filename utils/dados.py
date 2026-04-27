@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import mysql.connector
 import json
 import time
+import copy
 
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -96,7 +97,7 @@ def calcular_media_estatisticas(jogos, equipe, num_jogos_passados_media=8):
     
     return total_estatisticas
 
-def get_media_estatisticas_time_teste(equipe, data_jogo, num_jogos_passados_media=8):
+def get_media_estatisticas_time_teste(equipe, data_jogo, temporada , num_jogos_passados_media=8):
     time.sleep(0.005)
     conn = mysql.connector.connect(**db_config)    
     try:
@@ -104,10 +105,12 @@ def get_media_estatisticas_time_teste(equipe, data_jogo, num_jogos_passados_medi
         # Seleciona todos os jogos anteriores ao jogo especificado
         query = """
             SELECT equipe_casa, equipe_visitante, estatisticas_casa, estatisticas_visitantes FROM jogos
-            WHERE (equipe_casa = %s OR equipe_visitante = %s) AND data < %s
+            WHERE (equipe_casa = %s OR equipe_visitante = %s) 
+            AND data < %s
+            AND ano = %s
             ORDER BY data
         """
-        cursor.execute(query, (equipe, equipe, data_jogo))
+        cursor.execute(query, (equipe, equipe, data_jogo, temporada))
         jogos = cursor.fetchall()
         
         if jogos:
@@ -118,18 +121,20 @@ def get_media_estatisticas_time_teste(equipe, data_jogo, num_jogos_passados_medi
         cursor.close()
         conn.close()
 
-def get_media_estatisticas_time_treino(equipe, data_jogo, num_jogos_passados_media=8):
+def get_media_estatisticas_time_treino(equipe, data_jogo, temporada, num_jogos_passados_media=8):
     time.sleep(0.005)
     conn = mysql.connector.connect(**db_config)
     try:
         cursor = conn.cursor(dictionary=True)
-        # Seleciona todos os jogos anteriores e o jogo especificado
+        # Adicionamos 'AND ano = %s' para isolar a temporada
         query = """
             SELECT equipe_casa, equipe_visitante, estatisticas_casa, estatisticas_visitantes FROM jogos
-            WHERE (equipe_casa = %s OR equipe_visitante = %s) AND data <= %s
+            WHERE (equipe_casa = %s OR equipe_visitante = %s) 
+            AND data < %s 
+            AND ano = %s 
             ORDER BY data
         """
-        cursor.execute(query, (equipe, equipe, data_jogo))
+        cursor.execute(query, (equipe, equipe, data_jogo, temporada))
         jogos = cursor.fetchall()
         
         if jogos:
@@ -154,20 +159,24 @@ def get_jogos_temporada(ano):
         conn.close()
 
 def formatar_medias(jogos, isTreino, num_jogos_passados_media=10):
-    jogos_nova = jogos
+    # Cria uma cópia real dos dados para evitar bugs de memória
+    jogos_nova = copy.deepcopy(jogos)
+    
     for jogo in jogos_nova:
         equipe_casa = jogo['equipe_casa']
         equipe_visitante = jogo['equipe_visitante']
         data_jogo = jogo['data']
+        temporada_atual = jogo['ano'] # Pega o valor '2020-2021', por exemplo
         
         if isTreino:
-            media_casa = get_media_estatisticas_time_treino(equipe_casa, data_jogo, num_jogos_passados_media)
-            media_visitante = get_media_estatisticas_time_treino(equipe_visitante, data_jogo, num_jogos_passados_media)
+            # Passamos o parâmetro temporada_atual
+            media_casa = get_media_estatisticas_time_treino(equipe_casa, data_jogo, temporada_atual, num_jogos_passados_media)
+            media_visitante = get_media_estatisticas_time_treino(equipe_visitante, data_jogo, temporada_atual, num_jogos_passados_media)
         else:
-            media_casa = get_media_estatisticas_time_teste(equipe_casa, data_jogo, num_jogos_passados_media)
-            media_visitante = get_media_estatisticas_time_teste(equipe_visitante, data_jogo, num_jogos_passados_media)
+            # Fazemos o mesmo para o teste
+            media_casa = get_media_estatisticas_time_teste(equipe_casa, data_jogo, temporada_atual, num_jogos_passados_media)
+            media_visitante = get_media_estatisticas_time_teste(equipe_visitante, data_jogo, temporada_atual, num_jogos_passados_media)
         
-        # Substitui as estatísticas brutas pelas médias calculadas
         jogo['estatisticas_casa'] = media_casa
         jogo['estatisticas_visitantes'] = media_visitante
         
