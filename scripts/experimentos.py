@@ -5,16 +5,18 @@ def read_dados(treino_path, teste_path):
     treino_df = pd.read_csv(treino_path)
     teste_df = pd.read_csv(teste_path)
 
-    # Criar uma coluna 'victory_casa' como variável alvo
-    treino_df['victory_casa'] = treino_df['placar_casa'] > treino_df['placar_visitante']
-    teste_df['victory_casa'] = teste_df['placar_casa'] > teste_df['placar_visitante']
+
+    colunas_vazamento = [
+         'placar_casa', 'placar_visitante',
+         'data', 'ano', 'equipe_casa', 'equipe_visitante','resultado'
+    ]
 
     # Definir variáveis de entrada e saída
-    X_train = treino_df.drop(['victory_casa'], axis=1)
-    y_train = treino_df['victory_casa']
+    X_train = treino_df.drop(columns=colunas_vazamento, errors='ignore')
+    y_train = treino_df['resultado']
 
-    X_test = teste_df.drop(['victory_casa'], axis=1)
-    y_test = teste_df['victory_casa']
+    X_test = teste_df.drop(columns=colunas_vazamento, errors='ignore')
+    y_test = teste_df['resultado']
 
     # Manter apenas as colunas numéricas
     numeric_features = X_train.select_dtypes(include=['int64', 'float64']).columns
