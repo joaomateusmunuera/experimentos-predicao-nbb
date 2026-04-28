@@ -57,9 +57,9 @@ for modelo in modelos:
                 try:
                     # Execução dos modelos conforme as correções de leak [cite: 36, 62, 68]
                     if modelo == 'naive_bayes':
-                        accuracy, _, _ = run_model_naive_bayes(treino_path, teste_path)
+                        accuracy, _, _ = run_model_naive_bayes(treino_path, teste_path, True)
                     elif modelo == 'svm':
-                        accuracy, _, _ = run_model_svm(treino_path, teste_path, False)
+                        accuracy, _, _ = run_model_svm(treino_path, teste_path, True)
 
                     if accuracy is not None:
                         total_jogos_testados += 1
