@@ -9,10 +9,12 @@ from svm import run_model_svm
 from random_forest import run_model_rf
 from experimentos import save_results_csv
 from naive_bayes import run_model_naive_bayes
+from vanilla import run_model_vanilla
+from xgboost_model import run_model_xgboost
 
 # Configurações
 #jogos_medias = ['15']
-modelos = ['naive_bayes','svm']
+modelos = ['xgboost']
 temporadas = [
     "2008-2009","2009-2010", "2011-2012", "2012-2013",
     "2013-2014", "2014-2015", "2015-2016", "2016-2017",
@@ -60,6 +62,12 @@ for modelo in modelos:
                         accuracy, _, _ = run_model_naive_bayes(treino_path, teste_path, True)
                     elif modelo == 'svm':
                         accuracy, _, _ = run_model_svm(treino_path, teste_path, True)
+                    elif modelo == 'vanilla':
+                        accuracy, _, _ = run_model_vanilla(treino_path, teste_path)
+                    elif modelo == 'random_forest':
+                        accuracy, _, _ = run_model_rf(treino_path, teste_path, True)
+                    elif modelo == 'xgboost':
+                        accuracy, _, _ = run_model_xgboost(treino_path, teste_path, True)
 
                     if accuracy is not None:
                         total_jogos_testados += 1
