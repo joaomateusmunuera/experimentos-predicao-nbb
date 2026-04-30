@@ -18,7 +18,7 @@ def get_hyper_params_xgboost(X_train, y_train):
     xgb = XGBClassifier(eval_metric='logloss', random_state=42)
 
     # Configurar o Grid Search com validação cruzada
-    grid_search = GridSearchCV(estimator=xgb, param_grid=param_grid, cv=2, scoring='f1_weighted', verbose=2)
+    grid_search = GridSearchCV(estimator=xgb, param_grid=param_grid, cv=2, scoring='f1_weighted', verbose=2, n_jobs=-1)
 
     try:
         # Executar o Grid Search no conjunto de treino
