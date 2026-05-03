@@ -2,6 +2,7 @@ import os
 import time
 import pandas as pd
 import numpy as np
+from sklearn.metrics import f1_score
 
 # Seus imports de modelos
 from rede_neural import run_model_rede_neural
@@ -9,10 +10,12 @@ from svm import run_model_svm
 from random_forest import run_model_rf
 from experimentos import save_results_csv
 from naive_bayes import run_model_naive_bayes
+from experimentos import read_dados
+from vanilla import run_model_vanilla
 
 # Configurações
 #jogos_medias = ['15']
-modelos = ['naive_bayes']
+modelos = ['svm','naive_bayes']
 temporadas = [
     "2008-2009", "2009-2010", "2011-2012", "2012-2013",
     "2013-2014", "2014-2015", "2015-2016", "2016-2017",
@@ -39,7 +42,8 @@ for modelo in modelos:
             janelas.sort(key=lambda x: int(x.split('-')[0]))
 
             acuracias_temporada = []
-            f1_temporada = []
+            y_real_acumulado = []      # resultado verdadeiro do jogo
+            y_pred_acumulado = []      # palpite feito pelo modelo para cada jogo
 
             print(f"\n>> Processando {modelo.upper()} | Temporada {temporada}")
 
@@ -53,7 +57,8 @@ for modelo in modelos:
                 if os.path.exists(treino_path) and os.path.exists(teste_path):
                     try:
                         accuracy = None
-                        f1 = None
+                        _, _, _, y_test = read_dados(treino_path, teste_path)
+                        valor_real = y_test[0]
 
                         if modelo == 'rede_neural':
                             accuracy, f1, _ = run_model_rede_neural(treino_path, teste_path, True)
@@ -61,13 +66,17 @@ for modelo in modelos:
                             accuracy, f1, _ = run_model_svm(treino_path, teste_path, True)
                         elif modelo == 'random_forest':
                             accuracy, f1, _ = run_model_rf(treino_path, teste_path, True)
-                        elif modelo == 'naive_bayes':  # <--- ADICIONE ESTE BLOCO
+                        elif modelo == 'naive_bayes':  
                             accuracy, f1, _ = run_model_naive_bayes(treino_path, teste_path)
+                        elif modelo == 'vanilla':
+                            accuracy, f1, _ = run_model_vanilla(treino_path, teste_path)
 
                         # Resultados somente se o modelo retornou valores válidos
                         if accuracy is not None and f1 is not None:
                             acuracias_temporada.append(accuracy)
-                            f1_temporada.append(f1)
+                            y_real_acumulado.append(valor_real) #resultado real
+                            predicao = valor_real if accuracy == 1.0 else 1 - valor_real # matriz de confusao 
+                            y_pred_acumulado.append(predicao) #previsao
                         else:
                             print(f"[-] Modelo {modelo} retornou vazio na janela {pasta_janela}")
 
@@ -80,13 +89,13 @@ for modelo in modelos:
             # Consolidação dos resultados da temporada (Média dos N jogos testados)
             if acuracias_temporada:
                 mean_acc = np.mean(acuracias_temporada)
-                mean_f1 = np.mean(f1_temporada)
+                real_f1 = f1_score(y_real_acumulado, y_pred_acumulado, average='weighted') #
                 
                 results.append({
                     'Janela Incremental': 15, # O valor de K (5, 10 ou 15)
                     'Temporada': temporada,
                     'Acurácia': f'{mean_acc:.4f}',
-                    'F1-Score': f'{mean_f1:.4f}'
+                    'F1-Score': f'{real_f1:.4f}'
                 })
 
         # Salva um CSV de resultados para cada combinação de Modelo e K
