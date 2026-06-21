@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 # --- CONFIGURAÇÕES ---
-modelos = ['svm']
+modelos = ['naive_bayes','random_forest','rede_neural','xgboost']
 temporadas = [
     "2008-2009", "2009-2010", "2011-2012", "2012-2013",
     "2013-2014", "2014-2015", "2015-2016", "2016-2017",
@@ -31,11 +31,6 @@ for modelo in modelos:
             plt.plot(df_grid['Jogo_Real_n'], df_grid['Acuracia_Acumulada'], 
                      label=f'Acurácia {modelo.upper()}', 
                      color='#1f77b4', linewidth=2.5)
-
-            # 2. Plotar a linha da Acurácia Vanilla - VERMELHA
-            plt.plot(df_vanilla['Jogo_Real_n'], df_vanilla['Acuracia_Acumulada'], 
-                     label='Acurácia Vanilla', 
-                     color='red', linewidth=2, alpha=0.8)
 
             # 3. Plotar a linha do F1-Score Vanilla - VERMELHO CLARO PONTILHADO
 
@@ -72,14 +67,6 @@ for modelo in modelos:
                         xytext=(final_jogo + espaco_lateral, 0.70), # Altura fixa no topo
                         arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0.2", color='black'),
                         bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8))
-
-            # 2. Vanilla Acc (Sempre no meio da escada)
-            final_acc_vanilla = df_vanilla['Acuracia_Acumulada'].iloc[-1]
-            plt.annotate(f'Final Acc Vanilla: {final_acc_vanilla:.4f}', 
-                        xy=(final_jogo, final_acc_vanilla), 
-                        xytext=(final_jogo + espaco_lateral, 0.58), # Altura fixa no meio
-                        arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0.0", color='red'),
-                        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="red", alpha=0.1))
             
             # 3. Vanilla F1 (Sempre na base da escada)
             if 'F1_Score_Acumulado' in df_vanilla.columns:
